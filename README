@@ -1,137 +1,25 @@
-README
+HyperCal
+--------
 
-HyperCal Version 3 Beta 2
+HyperCal is not a module, but is a web-based
+(CGI) application. How you install it is going
+to depend on what HTTP server you are running,
+where you want the thing to live, and what 
+OS you are running on.
 
-This is the second Beta release of HyperCal version
-3.  The beast should be completely functional now.  It
-is, however, still labelled "Beta", meaning that there
-are perhaps some features still missing, and is not
-supported.  However, having said that to absolve 
-myself of legal blame, I will say that I am not aware
-of any current problems with it.  In any case, this 
-software is provided free of charge, and you are
-guaranteed to get at least what you paid for.
+So, rather than go through all that in gory
+details, I would encourage you to look at the 
+information provided on the web site at
+http://www.rcbowen.com/products/HyperCal/ where
+you will find general information, and an 
+installation document.
 
-The biggest change since the previous version, apart
-from the fact that it works ;-) is that I am using several
-of the Time:: modules from CPAN.  You will need to 
-acquire them before this will work.  They are free, and
-work on both Unix and Win32 machines, so this should not
-be too much of a hardship.  CPAN is located at 
-http://www.perl.com/CPAN, amoung other places, and the Time
-modules can be found in modules/by-module/Time
+In particular, please look at the system 
+requirements portion, which will tell you what
+perl modules you will need to install before
+the thing will work.
 
-There is also a slightly different file format than the
-"Alpha" versions.  I think that it makes more sense.
-
-There will shortly be a (not free) version that runs
-on top of a mSQL database.  Stay tuned.  Let me know 
-if you are interested.
-
-If things don't work just how you like them to, or if
-you need additional features, just drop me a line at 
-customCGI@rcbowen.com, and I am sure we can work something
-out.
-
+--
 Rich Bowen
 rbowen@rcbowen.com
-www.RCBowen.com
-April 4, 1998
-
-----------------------------------
-
-HyperCal Version 3 Alpha 2
-
-This is a rather large revision over previous versions
-of HyperCal.  The main changes are that the code will
-now actually be readable (novel concept) and the HTML
-will be contained in template files, rather than inline
-in the CGI code.
-
-In addition to these changes, the structure of the 
-data file will change to accomodate better programming
-practices, and there will be no attempt to make this at
-all compatible with previous versions.  I might, at some
-later date, try to write a routine that converts the
-old data files to the new format, but that is waaaay 
-down on my list of priorities, right under dusting in 
-the attic.
-
-HyperCal is written in Perl 5, and makes use of a motley 
-collection of modules.  An attempt has been made to make 
-this thing run under Win32 as well as under real 
-operating systems, so in cases I have chosen the method
-that works under Win32 rather than the sensible way.
-This will of course change in the future, when all
-sensible people are using Gurusamy Sarathay's port of 
-Perl.  We can all dream, can't we?
-
-HyperCal is a production of RCBowen.com Perl Scripting.
-HyperCal is distributed freely, and you are encouraged to
-hack on the code as much as you like.  If you do something
-really cool with it, I'd like to know about it, and would
-also appreciate seeing your source code.
-
-At some point, there is likely to be another version of
-the product that lives on top of a real database - Access
-for Win32, and mSQL for Unix systems.  That version will 
-probably not be free, but will be more robust and faster, 
-by virtue of using a real database.  Stay tuned.
-
-Rich Bowen
-RCBowen@RCBowen.com
-www.rcbowen.com
-December 22, 1997
-
-
-
-Data file format
-
-Fields in the data file are separated by $delimiter,
-which defaults to '~~', but can be set to other stuff
-if you prefer, for some reason.  Good candidates are 
-'\0' and combinations that are not likely to occur in
-event descriptions.
-
-$record = join $delimiter, ($datetime,
-							$endtime,
-							$annual,
-							$description,
-							$type,
-							$recurringid,
-							$id
-							);
-
-Not Yet Implemented (or Things To Do)
-
-The following things have not yet been put into the code,
-or are still broken.
-
-Recurring events - as in HyperCal 2.x, you will be able to
-schedule events that occur event week, or every day, etc, 
-for a finite period of time.  Eg., every day for 4 days.
-This has not yet been put in.  Annual events are events 
-that occur every year forever, and these are handled 
-differently.  Obviously, we would not want to have a 
-separate event in the datebook for every occurance of an
-annual event between now and the apocolypse.
-
-Announcements - as in HyperCal 2.x, you will be able to 
-post an announcement that appears on the month-view of
-HyperCal.  This just has not yet been written for the new
-file format.
-
-Month-at-a-glance - View all events for a month on one page
-
-Search - Search for events that match a particular keyword
-
-Email notification - perhaps my most requested feature - 
-the ability to be notified by email about upcoming events.
-Perhaps you will register for particular events, so that you
-don't get email on everything. Perhaps you will register
-for a particular type of event.  Event types have not yet
-been implemented either.
-
-Edit an event - due to the ghastly file format I used to use,
-it was a huge pain to try to edit an existing event.  This 
-should be substantially less painful now.
+RCBowen.com Perl Programming
