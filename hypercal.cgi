@@ -27,7 +27,7 @@ sub details	{
 	#  Determine some of the details to be printed on the calendar
 	my $form = shift;  #  Remember that $form is a reference
 	my %FORM = %$form;
-	my ($this_month, $this_year);
+	my ($this_month, $this_year, $line, $count);
 	my %details = %FORM;
 
 	# Determine what "today" is.
@@ -43,7 +43,7 @@ sub details	{
 		$this_year = $FORM{year};
 	}  #  End if...else
 	my $first_day = julian_day($this_year, $this_month, 1);
-	my $last_day = $today + days_in($this_year, $this_month);
+	my $last_day = $first_day + days_in($this_year, $this_month);
 	my $first_dow = day_of_week($first_day);
 
 	$details{year} = $this_year;
@@ -114,7 +114,7 @@ sub details	{
 		$details{calendar} .= "<a href=\"$base_url$disp_day?day=$day\">$date_place</a>";
 
 		#  OK, now the time consuming part - what happens this day?
-		my $line;
+		$count=0;
 		for $line (@datebook)	{
 			$event = EventSplit($line);
 			%Event = %$event;
@@ -123,18 +123,22 @@ sub details	{
 			if ($Event{annual}) 	{
 				(undef, $_mon, $_day) = inverse_julian_day($Event{day});
 				if ($_day == $date_place && $_mon == $this_month)	{
+					$count++;
 					$details{calendar} .= qq~
 					<br><small>$Event{description}</small>
-					~;
+					~ if $DisplayEvents;
 				}
 			}  else	{  # The rest of the events
 				if ($Event{day} == $day) {
+					$count++;
 					$details{calendar} .= qq~
 					<br><small>$Event{description}</small>
-					~;
+					~ if $DisplayEvents;
 				}  #  End if
 			} #  End else 
 		}  #  End for datebook
+		$details{calendar} .= "<br><small>($count)</small>"
+			 if ($DisplayNumber and $count);
 		$details{calendar} .= "</td>\n";
 		
 		#  Is is a Saturday?  That's the end of the row.

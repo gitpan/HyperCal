@@ -34,6 +34,8 @@ require Exporter;
 			$announce
 			$announce_id
 			@months
+			$DisplayNumber
+			$DisplayEvents
 			);
 
 use vars qw($VERSION $server_name $delimiter $base_url $templates
@@ -41,13 +43,14 @@ use vars qw($VERSION $server_name $delimiter $base_url $templates
 			$add_date $del_date $edit_date $disp_day $add_announce
 			$del_announce $edit_announce $month_view $hypercal
 			$datebook $hypercal_id $announce $announce_id @months
+			$DisplayNumber $DisplayEvents
 			);
 
 
 #################################################
 ##  VARIABLES - SET THESE TO YOUR LOCAL CONFIG ##
 #################################################
-$VERSION="3.00 Beta 2";
+$VERSION="3.01";
 $server_name = "www.rcbowen.com";
 $delimiter = "~~";
 
@@ -67,6 +70,13 @@ $old=370;
 
 # Title of the calendar.
 $title="HyperCal Version $VERSION";
+
+#  1 is on, 0 is off.  Should we display the number
+#  of events on that day, or the event text.
+#  For some very high traffic calendars, you 
+#  might not want to display all the events.
+$DisplayNumber=1;
+$DisplayEvents=0;
 
 ###############################################################
 #   Customize the colors and images appearing in the calendar: 
