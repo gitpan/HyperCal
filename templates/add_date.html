@@ -1,0 +1,58 @@
+<html>
+<head><title>%%%title%%% - %%%month_text%%%, %%%year%%%</title></head>
+
+<body  %%%bgcolor%%%  %%%background%%%
+       %%%text%%% %%%link%%% 
+	   %%%vlink%%% %%%alink%%%
+	   >
+
+<h3>Add an appointment for %%%month_text%%% %%%day%%%,
+ %%%year%%%.</h3>
+
+<form method=post action="%%%base_url%%%%%%add_date%%%">
+<b>Date:</b> <select name=month>%%%months%%%</select>
+			 <select name=day>%%%days%%%</select>
+			 <input name=year size=5 value=%%%year%%%>
+<br>
+<b>Time:</b>
+<input name="month" value="%%%month%%%" type=hidden>
+<input name="year" value="%%%year%%%" type=hidden>
+<input name="day" value="%%%day%%%" type=hidden>
+<input name="routine" value="add_date" type=hidden>
+
+<input name="hour" size=2 value="00"><b>: </b><input name="min" value="00" size=2>
+<input type=radio name="ampm" value="am" CHECKED>AM
+<input type=radio name="ampm" value="pm">PM
+<br>
+<b>Until:</b>
+<input name="hour_done" size=2 value="00"><b>: </b><input name="min_done" value="00" size=2>
+<input type=radio name="ampm_done" value="am" CHECKED>AM
+<input type=radio name="ampm_done" value="pm">PM
+<br>
+<input type=checkbox name="annual"> Annual event?
+<br>
+
+<b>Description</b><br>
+<textarea name="desc" rows=5 cols=60 wrap=virtual></textarea><br>
+
+<!--
+
+Maybe we'll add the recurring stuff back later
+
+<table><tr><td valign=top rowspan=5><b>Event occurs:</b><br>
+<td><input type=radio name="freq" value="once" CHECKED>Once<br>
+<tr><td><input type=radio name="freq" value="daily">Daily for : 
+<input name="days" value="1" size="2"> days.<br>
+<tr><td><input type=radio name="freq" value=\"weekly\">Weekly for : 
+<input name="weeks" value="1" size=2> weeks.<br>
+<tr><td><input type=radio name="freq" value="monthly">Monthly for : 
+<input name="months" value="1" size=2> months.<br>
+<tr><td><input type=radio name="freq" value="annual">Annually for : 
+<input name="years" value="1" size=2> years.<br>
+</table>
+
+-->
+
+<input type=submit value="Add Appointment">
+</form><hr>
+Calendar entries will expire and be deleted %%%old%%% days after the event.

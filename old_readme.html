@@ -1,0 +1,82 @@
+<html>
+<head><title>README:  HyperCal 3.00</title></head>
+<body bgcolor="FFFFFF" text="000000">
+
+<h2>README</h2>
+
+<h3>HyperCal Version 3 Beta 1</h3>
+
+Several lifetimes ago (I think it was October, 1995), I
+was a new Perl hacker, and I wrote HyperCal as an 
+exercise.  It did not occur to me as I was writing that
+the program would find uses all over the world, and that
+I would spend hours every week answering email asking
+about the cryptic code I had thrown together.  But, the 
+code worked, and is being used in numerous places around
+the world.  Amazing what people will put up with.
+<p>
+
+Well, after two years of answering those email messages,
+I decided that it was about time to rewrite the program in
+such a way that I would not cower in shame every time I
+looked at the source.  Along the way, I would use some of
+the tricks that I had developed on the way to becoming a 
+seasoned Perl Hacker.
+<p> 
+
+So, here it is.  HyperCal Version 3.  The main changes are
+as follows:
+<p>
+
+<b>Data file format</b>:  Seems that when I originally wrote 
+HyperCal, I was blissfully unaware that Perl had date and time
+functions built right in, and I quite happily reinvented the
+wheel (or the calendar).  Unfortunately, I did it badly. 
+The new data file format makes use of the time functions that
+Perl gives you for free - localtime and timelocal.  Also, in
+addition to storing the start time and end time of an event, 
+I allow events to be annual events, so that you don't have to 
+re-enter them every year.  I have also put in there a concept
+of event type, and something for recurring events, although I
+have not yet implemented either of those ideas. <p>
+
+<b>Code structure</b>:  OK, I admit it, the code was ghastly,
+unreadable spaghetti code.  I have attempted to make the code
+more readable, use syntax that is more appropriate for Perl 5,
+and use functions and subroutines a little more consistently.
+This should reduce the number of support emails more than 
+anything else. <p>
+
+<b>HTML template files</b>:  In the past, in order to change
+the look of a page, you had to paw through the code, try to 
+figure out where that part of the page was getting generated,
+and modify print statements.  Arrgh!  Now, everything is based
+off of HTML template files.  Editing rather ordinary-looking
+HTML changes the look of the pages that are produced.  The 
+default HTML pages are not intended to be attractive, but just
+to give you an idea of what my tags look like, and how to make
+your templates work.  Should be self-explanatory.  Plus, for
+all the newbies that try to use my code, you don't actually have
+to know Perl to use these scripts.  Another thing that will 
+save me time answering email.
+
+<hr>
+<a href="http://www.rcbowen.com/perl/HyperCal/">HyperCal</a>
+is a production of <a href="http://www.rcbowen.com/">RCBowen.com</a>.
+HyperCal is distributed freely, and you are encouraged to
+hack on the code as much as you like.  If you do something
+really cool with it, I'd like to know about it, and would
+also appreciate seeing your source code.
+<p>
+At some point, there is likely to be another version of
+the product that lives on top of a real database - Access
+for Win32, and mSQL for Unix systems.  That version will 
+probably not be free, but will be more robust and faster, 
+by virtue of using a real database.  Stay tuned.
+<p>
+
+Rich Bowen<br>
+RCBowen@RCBowen.com<br>
+www.rcbowen.com<br>
+December 22, 1997<br>
+</body></html>

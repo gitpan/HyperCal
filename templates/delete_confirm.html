@@ -1,0 +1,25 @@
+<html><head><title>Delete an event - %%%description%%%</title></head>
+<body bgcolor="FFFFFF" text="000000">
+<h3>Delete an event - %%%description%%%</h3>
+Deleting this event will permanently remove it from the
+database.  Are you sure you want to do this?
+
+<table>
+<tr>
+<td>
+<form method=post action="%%%del_date%%%">
+<input type=hidden name="routine" value="del">
+<input type=hidden name=ID value="%%%id%%%">
+<input type=hidden name="this_year" value="%%%this_year%%%">
+<input type=hidden name=day value="%%%day%%%">
+<input type=submit value="Yes, delete this event">
+</form>
+</td>
+<td>
+<form method=post action="%%%disp_day%%%">
+<input type=hidden name=day value="%%%day%%%">
+<input type=submit value="No, don't delete">
+</form>
+</td>
+
+</table>

@@ -1,0 +1,22 @@
+<html>
+<head><title>Edit an announcement - %%%month_text%%%, %%%year%%%</title></head>
+
+<body  %%%bgcolor%%%  %%%background%%%
+       %%%text%%% %%%link%%% 
+	   %%%vlink%%% %%%alink%%%
+	   >
+
+
+<form method=POST action="%%%url%%%">
+<input type=hidden name="action" value="edit">
+<input type=hidden name="month" value="%%%month%%%">
+<input type=hidden name="year" value="%%%year%%%">
+<input type=hidden name="id" value="%%%id%%%">
+<input type=checkbox name="annual" %%%annual%%%> Annual announcement?<p>
+<textarea name="announcement" rows=3 cols=45
+		 wrap=virtual>%%%announcement%%%</textarea>
+<p>
+<input type=submit value="Edit announcement">
+</form>
+
+</body></html>

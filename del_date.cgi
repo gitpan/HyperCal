@@ -1,88 +1,92 @@
 #!/usr/bin/perl
-#
-#	Delete a date, part 1
-#	Will print an html form containing the entries for the 
-#  day and allow the user select one or more for deletion.
-#  Will then post this information to del_date_2 for 
-#  processing.
-#
-require 'httools.pl';
-require 'variables';
-&header;
+##############################################################
+#   File:  del_date.pl                                        
+#   Author:  Rich Bowen - rbowen@rcbowen.com                  
+#   Purpose:  Allows you to delete an event from a particular 
+#   	day on the calendar                                   
+#   Date:  Dec 27, 1997                                       
+##############################################################
+use RCBowen;
+use HyperCal;
+use Time::JulianDay;
+# use strict 'vars';
 
-#  Determine if it is a personal calendar
-($sub=$ENV{'PATH_INFO'})=~s#^/##;
-if ($sub=~/personal/) {require $personal};
+my %FORM = ();
+FormParse(\%FORM);
 
-#  Get arguments
-$date=$ENV{'QUERY_STRING'};
-($month,$day,$year,$command)=split(/&/,$date);
+PrintHeader();
 
-#  This determines if this is being called the first or second time ...
-if ($command eq "doit") { &part_2 }
-else 	{ &part_1 };
+if ($FORM{routine} eq "del")	{
+	($template, $details) = DeleteEvent(\%FORM);
+	} else {
+	($template, $details) = DisplayForm(\%FORM);
+}
 
-sub part_1 	{
-# 	Prints the HTML form and sends the data to part 2
+PrintTemplate($templates, $template, $details);
 
-&julean($month,$day,$year);
+########
 
-#  Print titles
-&title("Delete an appointment from $month\/$day\/$year.\n");
-print "<h3>Delete an appointment from $month\/$day\/$year.</h3>\n";
-print "Select appointment(s) to delete.<hr>\n";
+sub DisplayForm	{
+	#  Really, all I want to do here is the "are you sure" thing.
+	my ($form) = @_;
+	my $template = 'delete_confirm';
+	my %details = %$form;
 
-# Get appointments for that day
-open (APPS, "$datebook");
-@appoint=<APPS>;
-for (@appoint){chop};
-for $appt (@appoint)	{
-(@stuff)=split(/~~~/,$appt);
-$julean=@stuff[0];
-if ($julean==$jule) {push (@candidates,$appt);}}
+	#  Read in the data file
+	open (EVENTS, "$datebook");
+	my @events = <EVENTS>;
+	close EVENTS;
+	chomp @events;
 
-print "<form method=post action=$del_date?$month&$day&$year&doit>\n";
-foreach $candidate (@candidates)	{
-($julean,$time,$timeend,$description,$name,$id)=split(/~~~/,$candidate);
-print "<input type=hidden name=\"month\" value=\"$month\">";
-print "<input type=hidden name=\"day\" value=\"$day\">";
-print "<input type=hidden name=\"year\" value=\"$year\">";
-print "<input type=checkbox name=\"$id\">$description - ($time-$timeend)<br>\n";
+	@events = grep /$delimiter$form->{id}$/, @events;
+
+	#  Is someone trying to hack us?
+	my $event;
+	if ($event = pop @events)	{
+		my $pointer = EventSplit($event);
+		my %Event = %$pointer;
+		for $key (keys %Event)	{
+			$details{$key} = $Event{$key};
+		}  #  End for
+
+		$details{del_date} = "$base_url$del_date";
+		$details{disp_day} = "$base_url$disp_day";
+
+		#  What we really want $day to day is actually
+		#  the day, in this_year;
+		my ($year, $month, $day) = inverse_julian_day($details{day});
+		$details{day} = julian_day($details{this_year},$month,$day);
+
+	}  else  {
+		$template = 'error';
+		$details{error} = "You have entered an invalid event ID";
+	}
+
+	return ($template, \%details);
+}  #  End sub details
+
+
+sub DeleteEvent	{
+	#  Delete the event from the event file
+	my ($form) = @_;
+	my ($template, %details);
+
+	open (EVENTS, "$datebook");
+	@events = <EVENTS>;
+	close EVENTS;
+	chomp(@events);
+
+	@events = grep !/($delimiter)($form->{ID})$/, @events;
+
+	open (EVENTS, ">$datebook");
+	for (@events)	{
+		print EVENTS "$_\n";
 		}
-print "<hr>";
-print "<input type=submit value=\"Delete\"> entry or entries.";
-print "</form>";
-&footer;
-			}
+	close EVENTS;
 
+	#  Send them on their merry way
+	$template = 'redirect';
+	$details{URL} = "$base_url$disp_day?day=$form->{day}"; 
 
-sub part_2	{
-#
-#	Receives the date from del_date part 1, and does the dirty deed.
-&form_parse;
-
-#  Read in database;
-open (DATES, "$datebook") || die "Was unable to open datebook for reading.<br>\n";
-@dates=<DATES>;
-for (@dates){chop};
-
-for $date(@dates)	{
-@info=split(/~~~/,$date);
-$ID=@info[5];    # NOTE:  If the datebase format changes, this will
-		  #    need to be changed also.  
-$flag=0;
-foreach $key (keys %FORM)	{
-if ($ID==$key) {$flag=1};	}
-push (@newdates,$date) unless ($flag);
-		}	# end foreach $date
-
-open (DATES, ">$datebook");
-for (@newdates) {
-print DATES;
-print DATES "\n";	}
-print "<h2>Date(s) deleted</h2>";
-print "<hr>";
-print "Back to <a href=$base_url$disp_day?$FORM{'month'}&$FORM{'day'}&$FORM{'year'}>$FORM{'month'}\/$FORM{'day'}\/$FORM{'year'}</a><br>";
-print "Back to <a href=$base_url$hypercal?$FORM{'month'}&$FORM{'year'}>$FORM{'month'}\/$FORM{'year'}</a><br>";
-&footer;
-		}
+	return ($template, \%details);
+}  #  End sub

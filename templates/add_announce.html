@@ -1,0 +1,23 @@
+<html>
+<head><title>Add an announcement 
+	for %%%month_text%%% %%%year%%%</title></head>
+
+<body  %%%bgcolor%%%  %%%background%%%
+       %%%text%%% %%%link%%% 
+	   %%%vlink%%% %%%alink%%%
+	   >
+
+<h2>Add an announcement for %%%month_text%%% %%%year%%%</h2>
+
+<form method=POST action="%%%url%%%">
+<input type=hidden name="month" value="%%%month%%%">
+<input type=hidden name="year" value="%%%year%%%">
+<input type=hidden name="routine" value="add_announce">
+
+<input type=checkbox name="annual"> Annual announcement?<br>
+Announcement:<br>
+<textarea name="announce" cols=45 rows=3 wrap=virtual></textarea>
+<p>
+<input type="submit" value="Add announcement">
+</form>
+</body></html>

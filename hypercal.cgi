@@ -2,234 +2,229 @@
 #	HyperCal   by   Richard Bowen
 #  A HTML datebook.  
 #  This part draws the calendar and links it to the other scripts.
-#  Can be called as http://URL/hypercal, or with arguments
-#  as http://URL/hypercal?month&year
-require 'httools.pl';
+use RCBowen;
+use HyperCal;
+use strict 'vars';
+use Time::JulianDay;
+use Time::DaysInMonth;
+use vars qw (%details
+			);
 
-#   Set a few basic variables in an easy-to find location.
-require 'variables';
+PrintHeader();
 
-#  Reads arguments.  If no arguments, it will default to current month.
-$args=$ENV{'QUERY_STRING'}; 
-($sub=$ENV{'PATH_INFO'})=~ s#^/##;
-# Read the path info and strip leading /
+#  Get the arguments
+my %FORM = ();
+FormParse(\%FORM);
 
-# Determine which part of hypercal has been called.
-if ($sub=~/personal/) { &personal };
-if ($sub eq "goto") { &goto }
-else { &main };
+my $details = details(\%FORM);  #  Get some more details
+PrintTemplate($templates,'hypercal',$details);
 
-
-# ______________________________
-#
-#	The main part here - This is the part that prints the
-#  calendar as an HTML table, and links each day to listings of
-#  appointments for that day.
-#
-# _______________________________
-
-sub main	{
-&header;
-($this_month,$this_year)=split(/&/,$args);
-if ($args eq "") {	#  Defaults to current date if none specified.
-	&date;   #  Calls the todays date subroutine from httools.pl
-	$this_month=$month;
-	$this_year=$year;}
-
-($junksec,$junkmin,$junkhour,$today_day,$today_month,$today_year,$junkwday,$junkyday,$junkisdst)=localtime(time);$today_year+=1900;$today_month+=1;
-# Determine what "today" is.  Arrgh.  I hate all these variables!!
+###############################
+#  End of main program
 
 
-&month_txt("$this_month");
-print "<html><head><title>$title - $month_txt, $this_year</title></head>\n";
-print "<body";
-$month_image=@month_images[$this_month-1];
-($icon,$bg,$color,$text,$link,$vlink)=split(/~~/,$month_image);
-print " background=\"$bg\"" unless ($bg eq "none");
-print " bgcolor=\"$color\"" unless ($color eq "none");
-print " text=\"$text\"" unless ($text eq "none");
-print " link=\"$link\"" unless ($link eq "none");
-print " vlink=\"$vlink\"" unless ($vlink eq "none");
-print ">\n";
+sub details	{
+	#  Determine some of the details to be printed on the calendar
+	my $form = shift;  #  Remember that $form is a reference
+	my %FORM = %$form;
+	my ($this_month, $this_year);
+	my %details = %FORM;
+
+	# Determine what "today" is.
+	my $today = local_julian_day(time);
+	my ($today_year, $today_month, $today_mday) = inverse_julian_day($today);
+
+	if (! $details{month}) {	#  Defaults to current date if none specified.
+		$this_month = $today_month;
+		$this_year = $today_year;
+	} else	{
+		#  Get the month, year, from the command line
+		$this_month = $FORM{month};
+		$this_year = $FORM{year};
+	}  #  End if...else
+	my $first_day = julian_day($this_year, $this_month, 1);
+	my $last_day = $today + days_in($this_year, $this_month);
+	my $first_dow = day_of_week($first_day);
+
+	$details{year} = $this_year;
+	$details{month_text} = month_txt($this_month);
+
+	#  page color, link color, etc
+	&body_tag($this_month, \%details);
+
+	#	Read datebook into memory
+	#
+	open (DATES, $datebook) or die "Unable to open datebook: $!";
+	my @datebook=<DATES> ;
+	close DATES;
+
+	############################################################
+	#   Since we are looking at just one month, it would        
+	#    make sense at this point to take a few microseconds to 
+	#    pull out just the events for this month, hmmmm?
+	#  This will save time later        
+	############################################################
+
+	my (%Event,@thismonth_datebook,$event);
+	for (@datebook)	{
+		my $event = EventSplit($_);
+		%Event = %$event;
+
+		if ($Event{annual} || (($Event{day} >= $first_day) && 
+					($Event{day} <= $last_day)) )	{
+			push @thismonth_datebook, $_;
+		} #  End if
+	}  #  End for
+	@datebook = @thismonth_datebook;
 
 
-#	Read datebook into memory
-#
-open (DATES, $datebook);
-@datebook=<DATES>;
+	#  Print some blank cells for the space before the first
+	#  day of the month
+	######################
+	$details{calendar} .= "<tr><td colspan=$first_dow></td>\n" 
+				unless ($first_dow == 0);
 
-#  This stuff taken from a script by David Pitts
-#  Generated the html calendar
+	my $week_day = $first_dow;
 
-@months=("December", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
-@last_days=(31,31,28,31,30,31,30,31,31,30,31,30,31);
-@days_of_week=("Sun","Mon","Tue","Wed","Thu","Fri","Sat");
-@month_offset=(3,3,0,3,2,3,2,3,3,2,3,2,3);
+	#  Loop through all the days in the month
+	my ($date_place, $day, $_mon, $_day);
 
-print "<center>";
-print "<table border=6 cellpadding=5 width=100%>\n";
-print "<tr><td align=center colspan=7><center><h2>@months[$this_month], $this_year</h2>";
+	my $end_of_month = days_in($this_year, $this_month);
+	for ($date_place = 1; $date_place <= $end_of_month; $date_place++)	{
 
-if ($multi_user eq "yes" && $personal_on eq "no") {
-print "<form method=post action=\"$base_url$hypercal/personal\">";
-print "<input type=submit value=\"Go To Personal Calendar\">";}
-elsif ($personal_on eq "yes")	{
-($link=$hypercal)=~s/\/personal//g;
-print "<form method=post action=\"$base_url$link\">";
-print "<input type=submit value=\"Go To Public Calendar\">";}
+		#  Print that day's stuff
+		$day = $first_day + $date_place - 1;
 
-#  Month-appropriate icon
-print "<img src=\"$icon\" alt=\"\" align=middle hspace=30>" unless ($icon eq "none");
-print "</form>";
-print "</center>";
+		#  Is is a sunday?  Begin a new row
+		if ($week_day == 0) {
+			$details{calendar} .= "<tr> "
+			}  #  End if sunday
 
-$week_days=join(" <th> ",@days_of_week);
-print "<tr><th>$week_days<br>\n";
+		$details{calendar} .= "<td valign=top align=left";
 
-for ($i=1906; $i<$this_year; $i++)	{
-	$days_offset++;
-	if (($i-1)%4==0)
-		{$days_offset++}; # Leap years
-	} # end for
-if (($this_year%4)==0 && ($this_month>2))
-	{$days_offset++}; #  Current year is leap year
-
-for ($j=1; $j<($this_month);$j++)	{
-	$days_offset+=@month_offset[$j]};
-
-$first_day_of_month=($days_offset%7);
-
-$last_day_in_month=@last_days[$this_month];
-if (($this_month==2)&&($this_year%4==0)){$last_day_in_month=29};
-
-$date_place=0;
-
-while ($date_place<$last_day_in_month)	{
-print "<tr>";
-for ($j=0; $j<=6; $j++)	{
-	if (($first_day_of_month>=0)||($date_place>=$last_day_in_month))
-	{print "<td align=center>-";
-	$first_day_of_month--}
-	else	{
-	$date_place++;
-	print "<td align=center><a href=\"$base_url$disp_day?$this_month&$date_place&$this_year\"> $date_place </a>";
-&appoints($this_month,$date_place,$this_year); 
-if ($today_day==$date_place && $today_month==$this_month && $today_year==$this_year){print"<br><b><font color=red>TODAY</font></b>"};
-} # end else
-}	#end for
-print "<br>\n";
-}	#  end while
-
-
-
-# Announcements for the month
-open (ANNO, "$announce");
-@announce=<ANNO>;
-$search=$this_month."_".$this_year;
-$any_announce="no";
-for $announces (@announce)	{
-($mo,$msg,$aid)=split(/&&/,$announces);
-if ($mo eq $search){
-if ($any_announce eq "no"){print "<br><tr><td align=center colspan=7>";}	# prints tr for first announce
-print "<center><b>$msg</b></center><br>";
-$any_announce="yes";}
-		}
-
-
-print "</table></center><br>\n";
-print "<center>Select a day to see the appointments for that day.  Numbers in parentheses indicate how many appointments are on that day.</center>";
-print "<hr>\n";
-
-#  Print links to next month and previous month, as well as 
-#  current month.
-
-print "<center>Go to:</center><br>\n";
-print "<center>";
-# print "<table border=0 cellpadding=5 width=100%>";
-$last_year=$this_year;
-$last_month=($this_month-1);
-if ($last_month == 0) {$last_month=12; $last_year=($this_year-1);}
-
-print "[ <a href=\"$base_url$hypercal?$last_month&$last_year\">  Previous month  </a>|\n";
-
-$next_year=$this_year;
-$next_month=($this_month+1);
-if ($next_month == 13) {$next_month=1; $next_year=($this_year+1);}
-
-print "<a href=\"$base_url$hypercal?$next_month&$next_year\">  Next month  </a>|";
-
-print "<a href=\"$base_url$hypercal\">  Current month  </a>]</center><br>\n";
-print "<center><form method=get action=$base_url$hypercal/goto>";
-print "<input type=submit value=\"Jump\"> to <input name=\"month\" size=2> \/ <input name=\"year\" size=4 value=\"$this_year\">";
-print "<input type=hidden name=\"this_year\" value=\"$this_year\">";
-print "</form></center><hr>";
-
-print "<center>";
-# print "<table width=100%><tr><td>";
-print "[ <a href=\"$base_url$edit_announce?$this_month&$this_year\">Add an announcement</a> for this month. ";
-print "| <a href=\"$base_url$edit_announce?$this_month&$this_year&delete\">Delete an announcement</a> from this month." unless ($any_announce eq "no");
-print " ]";
-print "</center>";
-
-print "<center>";
-print "<hr>[ <a href=\"http://www.rcbowen.com/perl/HyperCal.html\">About HyperCal</a>.";
-foreach $item (@linkto)	{
-($url, $page_title)=split(/~~/,$item);
-print " | <a href=\"$url\">$page_title</a>";
+		#  Highlight today
+		if ($day == $today and $highlight ne "none")	{
+			$details{calendar} .= " bgcolor=\"$highlight\""
+		} else	{
+			if ($td_color ne "" and $td_color ne "none")	{
+				$details{calendar} .= " bgcolor=\"$td_color\""
 			}
-if ($multi_user eq "yes")	{
-print " | <a href=\"$base_url$change_passwd\">Change your user password</a>"}
-print " ]</center><br>\n";
-print "HyperCal, Version $version, Copyright &copy; 1996, Richard Bowen.  All rights reserved.<br>\n";
+		}  #  End if..else
+		$details{calendar} .= ">\n";
+		$details{calendar} .= "<a href=\"$base_url$disp_day?day=$day\">$date_place</a>";
 
-&footer;
-	}	#  End of sub main
+		#  OK, now the time consuming part - what happens this day?
+		my $line;
+		for $line (@datebook)	{
+			$event = EventSplit($line);
+			%Event = %$event;
 
-#  Determines which days have appointments, and prints the number
-#  of appointments in that cell.  This routine takes most of the run
-#  time of this script.
-sub appoints   {
-$found=0;
-&julean($_[0],$_[1],$_[2]);  #  Julean date of day
-for $entry (@datebook)	{
-@temporary=split(/~~~/,$entry);
-if (@temporary[0]==$jule)  {$found++}};
-if ($found != 0) {print "   ($found)"};	}
+			#  How about annual events?
+			if ($Event{annual}) 	{
+				(undef, $_mon, $_day) = inverse_julian_day($Event{day});
+				if ($_day == $date_place && $_mon == $this_month)	{
+					$details{calendar} .= qq~
+					<br><small>$Event{description}</small>
+					~;
+				}
+			}  else	{  # The rest of the events
+				if ($Event{day} == $day) {
+					$details{calendar} .= qq~
+					<br><small>$Event{description}</small>
+					~;
+				}  #  End if
+			} #  End else 
+		}  #  End for datebook
+		$details{calendar} .= "</td>\n";
+		
+		#  Is is a Saturday?  That's the end of the row.
+		if ($week_day == 6) {
+			$details{calendar} .= "</tr>\n"
+			}  #  End if saturday
+
+		$week_day ++;
+		if ($week_day == 7) {$week_day = 0};  #  Start the week over
+	}  # End for date_place - repeated for each day in the month
 
 
-sub goto	{
-#
-#  Gets data from hypercal to go to a particular month
-#  and redirects to that month.
-#  Data comes in as QUERY_STRING
-# &form_parse is not used
+	# Announcements for the month
+	open (ANNO, "$announce");
+	my @announce=<ANNO>;
+	close ANNO;
+	my $any_announce = "no";
+	my ($announces, %Announce,$pointer);
 
-($pair1, $pair2, $pair3)=split(/&/,$args);
-($junk, $month)=split(/=/, $pair1);
-($junk, $year)=split(/=/, $pair2);
-($junk, $this_year)=split(/=/, $pair3);
-#  Need some error checking ...
-if ($month eq ""){$month=1};
-if ($year eq""){$year=$this_year};
-if ($month>12) {$month=12};
-if ($month<1) {$month=1};
-if ($year<1) {$year=1};
-if ($year>9999) {$year=9999};
-$args="$month&$year";
-&main
-	}		#  End of &goto
+	for $announces (@announce)	{
+		$pointer = AnnounceSplit($announces);
+		%Announce = %$pointer;
+		if ($Announce{month} eq $this_month && 
+			($Announce{year} eq $this_year || $Announce{year} eq "xxxx") )   {
+			if ($any_announce eq "no")  {
+				$details{announcements} = "<tr><td align=center colspan=7>"
+				}
+			$details{announcements} .= "<center><b>$Announce{announcement}</b></center>";
+	   		$any_announce="yes";
+	   		}  #  end if
+		}  #  End for
 
-sub personal	{
-#
-#	Determine if the personal part is being called, and alter 
-# 	some variables accordingly.
-#####
+	#  Goto form
 
-#  The string passed in from the main program is $sub
-$sub=~s/personal\///;	# strip the "personal" off of the string;
+	$details{'goto'} = qq~
+	<form method=GET action=$base_url$hypercal>
+	<input type=submit value="Jump"> to 
+	<select name="month">
+	~;
 
-$user_id=$ENV{'REMOTE_USER'};	# Get the user id from the auth info
+	for (1..12)	{
+		$details{'goto'} .= "<option value=\"$_\"";
+		if ($_ == $this_month)	{
+			$details{'goto'} .= " SELECTED"
+		}
+		$details{'goto'} .= ">$months[$_]";
+	}  # End for
 
-$user_variables=~s/USERNAME/$user_id/;
-require "$user_variables";
-}	#  End of sub personal
+	$details{'goto'} .= qq~
+	</select>
+	<input name="year" size=4 value="$this_year">
+	</form></center>
+    ~;
+
+	#  Link to other months
+	$details{month_view} = $base_url . $month_view 
+					. "?month=$this_month&year=$this_year";
+
+	my $last_year=$this_year;
+	my $last_month=($this_month-1);
+	if ($last_month == 0)	{
+		$last_month=12;
+		$last_year=($this_year-1)
+	} #  End if
+	$details{prev_month} ="$base_url$hypercal?month=$last_month&year=$last_year";
+
+	my $next_year=$this_year;
+	my $next_month=($this_month+1);
+	if ($next_month == 13)	{
+		$next_month=1;
+		$next_year=($this_year+1)
+	}  #  End if
+	$details{next_month} = "$base_url$hypercal?month=$next_month&year=$next_year";
+
+	$details{current} = "$base_url$hypercal";
+
+	#  Links to edit announcements
+
+	$details{edit_announcements} = 
+		"<a href=\"$base_url$add_announce?month=$this_month&year=$this_year\">Add announcements for this month</a>";
+	$details{add_event} = "$base_url$add_date?month=$this_month&year=$this_year";
+
+	if ($any_announce eq "yes")	{
+			$details{edit_announcements} .= qq~ 
+		| <a href="$base_url$edit_announce?month=$this_month&year=$this_year">Edit
+		             announcements for this month</a>
+		~;
+	}  #  End if
+
+	$details{version} = $HyperCal::VERSION;
+	return \%details;
+}  #  End sub details
+

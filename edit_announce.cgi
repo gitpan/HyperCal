@@ -1,111 +1,181 @@
 #!/usr/bin/perl
 #
-#	edit_announce
-#
-#	This script will handle the three types of editing
-#	of the announce file - add new announcements, delete
-#	existing announcements, and edit existing announcements.
-#
- 
-#	Make sure that this points to the right place:
-require 'variables';
-require 'httools.pl';
-&header;
+##############################################
+#   file: edit_announce.pl                    
+#   Author: Rich Bowen                        
+#   Date: December 29, 1997                   
+#                                             
+#   Edit announcements for a particular month 
+##############################################
+use RCBowen;
+use HyperCal;
+use strict 'vars';
 
-($sub=$ENV{'PATH_INFO'})=~s#^/##;
-if ($sub=~/personal/){require $personal};
+my %FORM= ();
+FormParse(\%FORM);
 
-($month,$year,$command)=split(/&/,$ENV{'QUERY_STRING'});
+my $routine = switch($FORM{action});
 
-if ($command eq "addit") { &addit }
-elsif ($command eq "delete") { &delete }
-elsif ($command eq "delete_2") { &delete_2 }
-else { &do_form };
+PrintHeader();
+my ($template, $details) = &{$routine}(\%FORM);
 
-sub do_form	{
-# This part will print the html form to collect the data
+PrintTemplate($templates, $template, $details);
 
-&month_txt("$month");
-&title("Add an announcement to $month_txt $year.");
+sub switch	{
+	my ($action) = @_;
+	if ($action eq "")	{
+		$action = "default";
+	}
+	my %switch = ('default'=>'DisplayAnnounce',
+				  'edit_form'=>'EditForm',
+				  'edit'=>'Edit',
+				  'del_confirm'=>'DeleteConfirm',
+				  'delete'=>'Delete'
+				  );
+	return $switch{$action};
+}
 
-print "<h2>Add an announcement to $month_txt, $year.</h2>";
-print "<hr>";
-print "<form method=post action=$base_url$edit_announce?$month&$year&addit>";
-print "<b>Announcement:</b><br>";
-print "<input name=\"announce\" size=40><hr>";
-print "<input type=hidden name=\"month\" value=\"$month\">";
-print "<input type=hidden name=\"year\" value=\"$year\">";
-print "<input type=submit value=\"Add it\"><br>";
+sub DisplayAnnounce  {
+	#  List all the announcements for this month
+	my ($form) = @_;
+	my (@announce, $line,
+		$pointer, %Announce);
+	my $template = 'list_announce';
+	my %details = %$form;
 
-&footer;
-}    #   This is the end of &do_form
+	open (ANNOUNCE, "$announce");
+	@announce = <ANNOUNCE>;
+	close ANNOUNCE;
 
-sub addit	{
- 
-&form_parse;
-&month_txt("$FORM{'month'}");
-&title("Announcement added to $month_txt, $FORM{'year'}");
+	@announce = grep /^($form->{month})($delimiter)/, @announce;
 
-#   Get the new id number
-open (ID, "$hypercal_id");
-@id=<ID>;
-for(@id){chop};
-@id[1]++;
-if (@id[1]>=999999){@id[0]=1};
-$id=@id[1];
-open (ID, ">$hypercal_id");
-for $each (@id)	{
-print ID "$each\n";}
+	for $line (@announce)	{
+		$pointer = AnnounceSplit($line);
+		%Announce = %$pointer;
 
-#	Write the announcement out to the file
-open (FILE, ">>$announce");
-print FILE "$FORM{'month'}_$FORM{'year'}&&$FORM{'announce'}&&$id\n";
+		$details{announce} .= qq~
+		<tr><td>$Announce{announcement}
+		<small>
+		[ <a href="$edit_announce?id=$Announce{id}&year=$form->{year}&month=$form->{month}&action=edit_form">Edit</a>]
+		[ <a href="$edit_announce?id=$Announce{id}&year=$form->{year}&month=$form->{month}&action=del_confirm">Delete</a>]
+		</small>
+		~;
+	}  #  End for
 
-print "Announcement added.  Go back to <a href=$base_url$hypercal?$FORM{'month'}&$FORM{'year'}>$month_txt, $FORM{'year'}</a> - you will need to reload the page to see your changes.";
-&footer;
+	body_tag($form->{month}, \%details);
+	return ($template, \%details);
+} #  End sub DisplayAnnounce
 
-		}	# This is the end of &addit	
+sub EditForm  {
+	my ($form) = @_;
+	my %details = %$form;
+	my $template = 'edit_announce';
+	my ($pointer, %Announce);
 
-sub delete	{
-open (ANN, "$announce");
-@entries=<ANN>;
-for (@entries){chop};
+   	#  Get the announcement details                           
+   	open (ANNOUNCE, "$announce");                             
+   	my @announce = (<ANNOUNCE>);                              
+   	close ANNOUNCE;                                           
+   	chomp @announce;                                          
+                                                                 
+   	@announce = grep /($delimiter)($form->{id})$/, @announce; 
+   	$pointer = AnnounceSplit($announce[0]);                   
+   	%Announce = %$pointer;                                    
+                                                                 
+   	body_tag($Announce{month}, \%details);                    
+   	$details{month} = $Announce{month};                       
+   	$details{announcement} = $Announce{announcement};         
+   	$details{url} = $base_url . $edit_announce;               
+                                                                 
+   	if ($Announce{year} eq "xxxx")	{                         
+   		$details{annual} = "CHECKED";                         
+   	}  #  End if                                              
+	
+	return ($template, \%details); 
+}  #  End sub EditForm
 
-&title("Delete entry from $month\/$year.");
-print "<h3>Select announcement(s) to delete</h3>";
-print "<hr>";
-print "<form method=post action=$base_url$edit_announce?$month&$year&delete_2>";
+sub Edit  {
+	my ($form) = @_;
+	my %details = ();
+	my ($year);
 
-$date=$month."_".$year;
-for $announces (@entries)	{
-($mo,$text,$id_no)=split(/&&/,$announces);
-if ($mo eq $date)	{
-print "<input type=checkbox name=\"$id_no\">   $text<br>";}
-				}
-print "<hr>";
-print "<input type=submit value=\"Delete announcement\">";
+	open (ANNOUNCE, "$announce");
+	my @announce = <ANNOUNCE>;
+	close ANNOUNCE;
+	chomp @announce;
 
-	}		#  This is the end of &delete
+	@announce = grep !/($delimiter)($form->{id})$/, @announce;
 
-sub delete_2	{
-&form_parse;
-&title("Announcement(s) deleted from $month\/$year");
-open (ANN, $announce);
-@announces=<ANN>;
-for(@announces){chop};
-for $announces (@announces)	{
-($dat,$anno,$id_no)=split(/&&/,$announces);
-$found=0;
-foreach $key (keys %FORM)	{
-if ($key==$id_no) {$found=1};	}
-push (@new_announce,$announces) unless ($found==1);
-				}   #  End for $announces
+	#  Build the correct new one
+	if ($form->{annual})	{
+		$year = "xxxx"
+	}  else  {
+		$year = $form->{year};
+	}
+	my $new_announce = join $delimiter, ($form->{month},
+									  $year,
+									  $form->{announcement},
+									  $form->{id}
+									 );
+	push @announce, $new_announce;
 
-open (ANN, ">$announce");
-for (@new_announce) {print ANN; print ANN "\n";}
+	open (ANNOUNCE, ">$announce");
+	for (@announce)	{
+		print ANNOUNCE "$_\n";
+	}
+	close ANNOUNCE;
 
-print "<h2>Announcement deleted</h2>";
-print "You may now go back to <a href=$base_url$hypercal?$month&$year>$month\/$year</a>.";
-print "<hr>";
-&footer;
-	}	#	End of delete_2
+	my $template = 'redirect';
+	$details{URL} = "$hypercal?month=$FORM{month}&year=$FORM{year}";
+
+	return ($template, \%details);
+}
+
+sub DeleteConfirm  {
+	my ($form) = @_;
+	my %details = %$form;
+	my $template = 'del_announce';
+	my ($pointer, %Announce);
+
+   	#  Get the announcement details                           
+   	open (ANNOUNCE, "$announce");                             
+   	my @announce = (<ANNOUNCE>);                              
+   	close ANNOUNCE;                                           
+   	chomp @announce;                                          
+                                                                 
+   	@announce = grep /($delimiter)($form->{id})$/, @announce; 
+   	$pointer = AnnounceSplit($announce[0]);                   
+   	%Announce = %$pointer;                                    
+                                                                 
+   	body_tag($Announce{month}, \%details);                    
+   	$details{month} = $Announce{month};                       
+   	$details{announcement} = $Announce{announcement};         
+   	$details{url} = $base_url . $edit_announce;               
+                                                                 
+	return ($template, \%details); 
+}  #  End sub EditForm
+
+sub Delete  {
+	my ($form) = @_;
+	my %details = ();
+	my ($year);
+
+	open (ANNOUNCE, "$announce");
+	my @announce = <ANNOUNCE>;
+	close ANNOUNCE;
+	chomp @announce;
+
+	@announce = grep !/($delimiter)($form->{id})$/, @announce;
+
+	open (ANNOUNCE, ">$announce");
+	for (@announce)	{
+		print ANNOUNCE "$_\n";
+	}
+	close ANNOUNCE;
+
+	my $template = 'redirect';
+	$details{URL} = "$hypercal?month=$FORM{month}&year=$FORM{year}";
+
+	return ($template, \%details);
+}
+

@@ -1,0 +1,22 @@
+<html><head><title>Delete an event for %%%month_text%%%
+ %%%day%%%, %%%year%%%</title></head>
+
+<body  %%%bgcolor%%%  %%%background%%%
+       %%%text%%% %%%link%%% 
+	   %%%vlink%%% %%%alink%%% >
+
+<h2>Delete an event for %%%month_text%%% %%%day%%%, %%%year%%%</h2>
+
+
+<form method=post action="%%%url%%%">
+<input name="routine" value="del" type=hidden>
+<input name="month" value="%%%month%%%" type=hidden>
+<input name="day" value="%%%day%%%" type=hidden>
+<input name="year" value="%%%year%%%" type=hidden>
+%%%events%%%
+<br>
+<input type=submit value="Delete event(s)">
+</form>
+
+</body></html>
+

@@ -2,71 +2,94 @@
 #  Display Day.  Reads in database and prints appointments for the
 #  selected day.  Allows option of adding new appointment.
 #
-require 'variables';
-require 'httools.pl';
-&header;
+use RCBowen;
+use HyperCal;
+use Time::JulianDay;
+use Time::CTime;
+use strict 'vars';
 
-#  Determine if this is a personal calendar;
-($sub=$ENV{'PATH_INFO'})=~s#^/##;
-if ($sub=~/personal/){require $personal};
+my %FORM = ();
+FormParse(\%FORM);
+PrintHeader();
 
-#   Read date from QUERY_STRING
-$info=$ENV{'QUERY_STRING'};
-($month,$day,$year)=split(/&/,$info);
+my $details = details(\%FORM);
+PrintTemplate($templates,'display',$details);
 
-#  Print titles to html page
-&month_txt("$month");
-&title("Appointments for $month_txt $day, $year.");
-print "<h2>Appointments for $month_txt $day, $year.</h2><hr>";
+##############################################
 
-#  Read in database.
-$any="no";     #  Flag which determines if appts were found.
-open (DATES, "$datebook");
-@dates=<DATES>;
-close DATES;
+sub details	{
+	my ($form) = @_;
+	my %details = %$form;
+	my ($begin, $end);
+	my $today = local_julian_day(time);
+	if (! $form->{day}) {
+		$form->{day} = $today;
+	}
 
-&julean($month,$day,$year);   #    Julean date of day in question.
+	my  ($year, $month, $day) = inverse_julian_day($form->{day});
+	#  page color, link color, etc
+	&body_tag($month, \%details);
 
-#  Checks database for listings of that day.
-print "<table border width=100%>";
-print "<tr><th> Time <th> Event <th> Name <br>";
-for $date (@dates)	{
-($julean,$time,$endtime,$desc,$name,$id)=split(/~~~/,$date);
-if ($julean==$jule) {
-print "<tr><td>";
-if ($time eq "00:00" && $endtime eq "00:00")  { print "(All day) ";}
-else {
-#  am/pm the time
-($hr,$min)=split(/:/,$time);
-if ($hr==24) {$hr="12";
-		$ampm="am"}
-else {
-if ($hr<12) {$ampm="am"}
-else {$hr-=12; 
-	if ($hr==0){$hr=12};
-	$ampm="pm"};
-}	# end else
-$time=$hr.":".$min." ".$ampm;
-print "$time";}
+	#  Read in database.
+	open (DATES, "$datebook");
+	my @dates=<DATES>;
+	close DATES;
+	my ($event, $events, %Event,@todays_events,
+		$date, $tmp_day, $tmp_month);
 
-if ($endtime eq "00:00") {}
-else {
-#  am/pm the time
-($hr,$min)=split(/:/,$endtime);
-if ($hr<=12) {$ampm="am"}
-else {$hr-=12; $ampm="pm"};
-if ($hr==0){$hr="12"};
-$endtime=$hr.":".$min." ".$ampm;
-print " - $endtime ";}
+	for $date (@dates)	{
+		$event = EventSplit($date);
+		if ($event->{annual})	{
+			(undef, $tmp_month, $tmp_day) 
+						= inverse_julian_day($event->{day});
+			if ($tmp_month == $month && $tmp_day == $day)	{
+				push (@todays_events, $date);
+			}  #  End if
+		}  else  {	
+			if ($form->{day} == $event->{day})	{
+				push (@todays_events, $date);
+			}  #  End if
+		}  #  End else
+	} #  End for dates
 
-print "<td> $desc <td> $name <br>";
-			$any="yes";}
+	my $howmany = @todays_events;
+	if ($howmany > 0)	{
+		for $events (sort @todays_events)	{
+			$event = EventSplit($events);
+			%Event = %$event;
+
+			$details{appointments} .= qq~
+			<tr>
+			<td>$Event{description}  <small>[
+			 <a href="$edit_date?id=$Event{id}&this_year=$year">Edit event</a> ]
+			 [ <a href="$del_date?id=$Event{id}&this_year=$year">Delete event</a> ]
+			 </small>
+			</td>
+			<td>
+			~;
+
+			if ($Event{begin} eq "0000" && $Event{end} eq "0000")	{
+				$details{appointments} .= "-";
+			} elsif ($Event{end} eq "0000")	{
+				$begin = AmPm($Event{begin});
+				$details{appointments} .= "$begin";
+			}  else  {
+				$begin = AmPm($Event{begin});
+				$end = AmPm($Event{end});
+				$details{appointments} .= "$begin - $end";
 			}
-if ($any eq "no") {print "<tr><td colspan=3><center><b>** No appointments **</b></center><br>";}
-print "</table>";
+			$details{appointments} .= "</td></tr>";
+			
+		}  #  End for
+	}  else  {  #  There were no events for this day
+		$details{appointments} = 
+		  "<tr><th colspan=2 align=center>** No Events **<br>";
+	}
 
-print "<hr>";
-print "<a href=$base_url$add_date?$month&$day&$year>Add an appointment</a><br>";
-print "<a href=$base_url$del_date?$month&$day&$year> Delete an appointment</a><br>" unless ($any eq "no");
-print "<a href=$base_url$hypercal?$month&$year>Back</a> to the calendar.";
-&footer;
+	$details{add} = "$base_url$add_date?day=$form->{day}";
+	$details{calendar} = "$base_url$hypercal?month=$month&year=$year";
+	$details{day_txt} = strftime("%A, %B %o, %Y",
+			localtime(jd_secondslocal($form->{day})));
+
+	return \%details;			
+}  #  End sub details
