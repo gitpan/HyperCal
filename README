@@ -1,25 +1,20 @@
 HyperCal
---------
+========
 
-HyperCal is not a module, but is a web-based
-(CGI) application. How you install it is going
-to depend on what HTTP server you are running,
-where you want the thing to live, and what 
-OS you are running on.
+DESCRIPTION:
 
-So, rather than go through all that in gory
-details, I would encourage you to look at the 
-information provided on the web site at
-http://www.rcbowen.com/products/HyperCal/ where
-you will find general information, and an 
-installation document.
+HyperCal is a web-based calendar application. While it is not
+intended to rival commercial groupware applications, it is a
+very handy events calendar for your web site. You can edit
+events directly from a web browser.
 
-In particular, please look at the system 
-requirements portion, which will tell you what
-perl modules you will need to install before
-the thing will work.
+AUTHOR:
 
---
-Rich Bowen
-rbowen@rcbowen.com
-RCBowen.com Perl Programming
+Rich Bowen - <rbowen@rcbowen.com>
+
+INSTALLATION:
+
+Installation instructions are available in install.html, included
+in this distribution. For more detailed, and perhaps up-to-date
+information, check my web site at http://www.rcbowen.com/
+

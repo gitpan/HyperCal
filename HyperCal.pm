@@ -8,150 +8,107 @@ require Exporter;
 			AnnounceSplit
 			GetId
 			convert_time
-			AmPm			
+			AmPm
+			FormParse
+			PrintTemplate
+			PrintHeader
+			Switch			
 
-			$server_name
-			$delimiter
-			$base_url
-			$templates
-			$ext
-			$old
-			$title
-			$highlight
-			$td_color
-			@month_images
-			$add_date
-			$del_date
-			$edit_date
-			$disp_day
-			$add_announce
-			$del_announce
-			$edit_announce
-			$month_view
-			$hypercal
-			$datebook
-			$hypercal_id
-			$announce
-			$announce_id
-			@months
-			$DisplayNumber
-			$DisplayEvents
+			$Config
 			);
 
-use vars qw($VERSION $server_name $delimiter $base_url $templates
-			$ext $old $title $highlight $td_color @month_images
-			$add_date $del_date $edit_date $disp_day $add_announce
-			$del_announce $edit_announce $month_view $hypercal
-			$datebook $hypercal_id $announce $announce_id @months
-			$DisplayNumber $DisplayEvents
+use vars qw($Config
 			);
 
 
+$Config={};
 #################################################
 ##  VARIABLES - SET THESE TO YOUR LOCAL CONFIG ##
 #################################################
-$VERSION="3.01";
-$server_name = "www.rcbowen.com";
-$delimiter = "~~";
+$Config->{VERSION}="3.2";
+$Config->{server_name} = "www.rcbowen.com";
+$Config->{delimiter} = "~~";
 
 # URL of the directory in which these files live
-$base_url="/scripts/hypercal/";
+$Config->{base_url}="/scripts/hypercal_dev/";
 
 #  Location of the hypercal templates - you need to specify full path
-$templates = "/home/rbowen/public_html/scripts/hypercal/templates";
+$Config->{templates} = "/home/rbowen/public_html/scripts/hypercal_dev/templates";
 
-# Names of the various program files
-#  Some sites only allow cgi's with a .cgi extension
-#  so you might need to change your file extension to "cgi"
-$ext = "cgi";
+#  Some sites only allow cgi's with a .cgi extension,
+#  or you might need to change your file extension to "pl"
+$Config->{ext} = "cgi";
 
 #  Number of days to keep past dates
-$old=370;
+$Config->{old}=90;
 
 # Title of the calendar.
-$title="HyperCal Version $VERSION";
+$Config->{title}="HyperCal Version $Config->{VERSION}";
 
 #  1 is on, 0 is off.  Should we display the number
 #  of events on that day, or the event text.
 #  For some very high traffic calendars, you 
 #  might not want to display all the events.
-$DisplayNumber=1;
-$DisplayEvents=0;
+$Config->{DisplayNumber}=1;
+$Config->{DisplayEvents}=0;
 
 ###############################################################
 #   Customize the colors and images appearing in the calendar: 
 ###############################################################
 
-$highlight="ivory";  # What color should "today" be highlighted in?
-$td_color = "lightblue"; #  How about the rest of the table cells?
+$Config->{highlight}="ivory";  # What color should "today" be highlighted in?
+$Config->{td_color} = "lightblue"; #  How about the rest of the table cells?
 
 #  This array contains the locations of images for the various
 #  months.  The format is
 #  [url_for_icon,url_for_background,bgcolor,text,link,visited link]
 #  This array must contain 12 elements. Any field where you have 
 #  no preference, indicate by 'none'
-@month_images=(
-	['/images/months/january.gif','none','333399','none','FFFF00','55FF8B'],
-	['/images/months/february.gif','none','none','none','none','none'],
-	['/images/months/march.gif','none','lightgreen','none','none','none'],
-	['/images/months/april.gif','none','none','none','none','none'],
-	['/images/months/may.gif','none','none','none','none','none'],
-	['/images/months/june.gif','none','none','none','none','none'],
-	['/images/months/july.gif','none','none','none','none','none'],
-	['none','none','none','none','none','none'],
-	['none','none','FFFFFF','000000','none','none'],
-	['/images/months/october.gif','none','000000','FFFF00','00DD00','9168D7'],
-	['/images/months/november.gif','none','FFFFFF','000033','none','none'],
-	['/images/months/december.gif','none','DDDDFF','FF3333','none','none']
-	);
-
-# Other files
-#  You probably don't want to change this stuff
-
-$add_date="add_date.$ext";
-$del_date="del_date.$ext";
-$edit_date="edit_date.$ext";
-$disp_day="disp_day.$ext";
-$add_announce="add_announce.$ext";
-$del_announce="del_announce.$ext";
-$edit_announce="edit_announce.$ext";
-$month_view="month.$ext";
-$hypercal="hypercal.$ext";
+my $month_dir = "/images/months"; # URL of month directory
+$Config->{month_images}= [
+	["$month_dir/january.gif",'none','white','black','blue','green'],
+	["$month_dir/february.gif",'none','white','black','blue','green'],
+	["$month_dir/march.gif",'none','white','black','blue','green'],
+	["$month_dir/april.gif",'none','white','black','blue','green'],
+	["$month_dir/may.gif",'none','white','black','blue','green'],
+	["$month_dir/june.gif",'none','white','black','blue','green'],
+	["$month_dir/july.gif",'none','white','black','blue','green'],
+	["$month_dir/august.gif",'none','white','black','blue','green'],
+	["$month_dir/september.gif",'none','white','black','blue','green'],
+	["$month_dir/october.gif",'none','white','black','blue','green'],
+	["$month_dir/november.gif",'none','white','black','blue','green'],
+	["$month_dir/december.gif",'none','white','black','blue','green']
+	];
 
 #  Data files
-$datebook="datebook";
-$hypercal_id="hypercal_id";
-$announce="announce";
-$announce_id="announce_id";
+my $datadir = "/home/rbowen/public_html/scripts/hypercal_dev/datafiles";
+$Config->{datebook}="$datadir/datebook";
+$Config->{announce}="$datadir/announce";
 
-@months=('December', 'January', 'February',
+$Config->{months} = ['December', 'January', 'February',
 		 'March', 'April', 'May', 'June',
 		 'July', 'August', 'September',
-		 'October', 'November', 'December');
+		 'October', 'November', 'December'
+		 ];
 
+#######
+#  End Variables
 #########################################################
 sub body_tag	{
 	my ($month,$details) = @_;
 
-	$details->{month_text} = &month_txt($month);
+	$details->{month_text} = month_txt($month);
 
 	my @fields=('image','background','bgcolor','text','link','vlink');
 
 	for (0..5)	{
 		$details->{$fields[$_]} = 
-			" $fields[$_] = $month_images[$month-1][$_] "
-				unless ($month_images[$month-1][$_] eq "none");
+			" $fields[$_] = $Config->{month_images}[$month-1][$_] "
+				unless ($Config->{month_images}[$month-1][$_] eq "none");
 			}  #  End for
-	$details->{month_image} = "<img src=\"$month_images[$month-1][0]\">"
-			 unless ($month_images[$month-1][0] eq "none");
+	$details->{month_image} = "<img src=\"$Config->{month_images}[$month-1][0]\">"
+			 unless ($Config->{month_images}[$month-1][0] eq "none");
 }  #  End sub body_tag
-
-sub error_print	{
-PrintHeader();
-my $error = shift;
-print "<b>$error</b><br>";
-exit(0);
-}
 
 sub EventSplit	{
 	my ($string) = @_;
@@ -165,7 +122,7 @@ sub EventSplit	{
 	 $Event{description},
 	 $Event{type},
 	 $Event{recurringid},
-	 $Event{id} ) = split (/$delimiter/, $string);
+	 $Event{id} ) = split (/$Config->{delimiter}/, $string);
 
 	return \%Event;
 }
@@ -178,42 +135,53 @@ sub AnnounceSplit	{
 	($Announce{month},
 	 $Announce{year},
 	 $Announce{announcement},
-	 $Announce{id} ) = split (/$delimiter/, $string);
+	 $Announce{id} ) = split (/$Config->{delimiter}/, $string);
 
 	return \%Announce;
 }
 
 sub GetId	{
-my $idfile = shift;
-open (ID, "$idfile") 
-       || &error_print("Was unable to open the ID file for reading");
-my $id=<ID>;
-close ID;
-$id++;
-if ($id>=999999) {$id=1};
-open (NEWID,">$idfile")  
-      || &error_print ("Was unable to open the ID file ($idfile) for writing");
-print NEWID $id;
-close NEWID;
-return $id;
-}
+	my $idfile = shift;
+	my ($lockfile, $id);
 
-#
-#	Sub 24time
+	#  Get a lock on the lock file
+	$lockfile = $idfile . ".lock";
+	open (LOCK, ">$lockfile");
+	flock LOCK, 2;
+
+	open (ID, "$idfile");
+	$id=<ID>;
+	close ID;
+	$id++;
+	if ($id > 999999) {
+		$id=1
+	} # Endif
+	open (NEWID,">$idfile") || die
+	             "Was unable to open $idfile for writing: $!";
+	print NEWID $id;
+	close NEWID;
+	
+	#  Release lock
+	flock LOCK, 8;
+	close LOCK;
+
+	return $id;
+}  #  End sub GetId
+
 #  Rewrites time into 24hr format.
-#
 sub convert_time	{
-my ($HOUR, $MINS, $merid) = @_;
+	my ($HOUR, $MINS, $merid) = @_;
 
-if ($merid eq "pm") {
- $HOUR+=12;
- if ($HOUR==24) {$HOUR=12}
-		}
-if ($HOUR==12 && $merid eq "am"){$HOUR=24};
-if ($HOUR>24){$HOUR=23};
-if ($MINS>59){$MINS=59};
-$HOUR=sprintf "%02.00f",$HOUR;
-$MINS=sprintf "%02.00f",$MINS;
+	if ($merid eq "pm") {
+	 $HOUR+=12;
+	 if ($HOUR==24) {$HOUR=12}
+			}
+	if ($HOUR==12 && $merid eq "am"){$HOUR=24};
+	if ($HOUR>24){$HOUR=23};
+	if ($MINS>59){$MINS=59};
+	$HOUR=sprintf "%02.00f",$HOUR;
+	$MINS=sprintf "%02.00f",$MINS;
+	return ($HOUR, $MINS);
 }
 
 sub AmPm	{
@@ -234,12 +202,72 @@ sub AmPm	{
 }
 
 sub month_txt   {  # converts number to month text
-my $month = shift;
-return ( ('ERROR','January','February','March',
-			'April','May','June','July',
-			'August','September','October',
-			'November','December')[$month] );
-                }
+	return ( $Config->{months}->[$_[0]] );
+}
+
+
+sub FormParse  {
+#  Parse HTML form, POST or GET.  Returns pointer to hash of name,value
+	my ($buffer, @pairs, $pair, $name,
+	    $value, $form,
+		);
+
+	if ($ENV{REQUEST_METHOD} eq "POST")	{
+		read (STDIN, $buffer, $ENV{'CONTENT_LENGTH'});
+	}  else  {
+		$buffer = $ENV{QUERY_STRING};
+	}
+
+	# Split the name-value pairs
+	@pairs = split(/&/, $buffer);
+
+	foreach $pair (@pairs)
+	{
+    	($name, $value) = split(/=/, $pair);
+    	$value =~ tr/+/ /;
+    	$value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+    	$value =~ s/~!/ ~!/g;
+
+		if ($form->{$name})	{
+			$form->{$name} .= "\0$value"
+		} else {
+	    	$form->{$name} = $value;
+		}
+	}     # End of foreach
+
+	return $form;
+}	#  End of sub
+
+sub PrintTemplate	{
+#  Displays an HTML template file in canonical RCBowen format,
+#  substituting values from %details.
+	my ($basedir,$template, $tmp) = @_;
+	my %details = %$tmp;
+
+	open (TEMPLATE, "$basedir/$template.html") 
+		or die "Could not open $basedir/$template.html: $!\n";
+	for $line (<TEMPLATE>)	{
+		$line =~ s/%%%(.*?)%%%/$details{$1}/g;
+		print $line;
+	}  #  End for
+	close TEMPLATE;
+} #  End sub PrintTemplate
+
+sub PrintHeader	{
+	print "Content-type: text/html\n\n";
+}
+
+sub Switch      {
+#  Determine which routine is to be called
+        my ($action,$actions,$default) = @_;
+        my @Actions = @$actions;
+
+        if (grep /^$action$/, @Actions) {
+                return $action;
+        }  else  {
+                return $default;
+        }
+} # End sub switch
 
 #########################################################
 # Do not change this, Do not put anything below this.

@@ -5,16 +5,19 @@
 ##  This is not a CGI program.  It is to be run       ##
 ##  from the console                                  ##
 ########################################################
+use lib '..';
 use HyperCal;
 use Time::JulianDay;
-my (@new_events, @new_announce, $pointer, %Event, %Announce, $day);
+my (@new_events, @new_announce, $pointer, %Event, %Announce, $day,
+    $today, $old_day, @events,
+     );
 
-my $today = local_julian_day(time);
-my $old_day = $today - $Config->{old};
+$today = local_julian_day(time);
+$old_day = $today - $Config->{old};
 
 #  First, get rid of old events
 open (EVENTS, "$datebook");
-my @events = <EVENTS>;
+@events = <EVENTS>;
 close EVENTS;
 chomp @events;
 

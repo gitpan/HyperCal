@@ -1,0 +1,15 @@
+Extras:
+-------
+
+Two "extra" programs provided more for my convenience
+than anything else.
+
+expire.pl - to be run via a cron job every night, of
+however often floats your boat. Removed old events
+from the datebook file, where "old" is defined by
+$Config->{old} in the HyperCal.pl file.
+
+todaySSI.cgi - as the name implies, this is a script
+to be run by SSI, which prints a list of events that
+fall on "today". 
+

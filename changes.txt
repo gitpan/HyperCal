@@ -1,0 +1,100 @@
+HyperCal Changes history:
+
+Version 3.2 - December 6, 1998
+
+Bug fixes:
+    <small> tag was not closed in calendar display
+	When editing annual events, you were returned to the
+	  year of the event, not to the year that you were
+	  looking at.
+	  
+Feature additions:
+   File locking on data access.
+   Improved documentation
+   Other minor modifications of template files
+   General code cleanup
+   
+Other
+	Finally added images for August and September
+
+Version 3.1 - August 29, 1998
+
+For reasons mostly evident to myself, I have reduced
+the number of files in this distribution. There are 
+now three CGI files - index.cgi, event.cgi, and 
+announcement.cgi
+
+index.cgi contains the display routines.
+event.cgi contains admin routines for adding, removing,
+and editing events.
+announcement.cgi contains admin routines for adding,
+removing, and editing announcements.
+
+This has a few main effects:
+
+1) Less hassle for me trying to keep up with 10 files.
+2) Scripts are divided into "user" and "admin" scripts.
+this lets the admin decide whether the user should have
+access to add/delete/edit events and/or announcements,
+and password protect the relevant file accordingly.
+3) If new display routines (such as Year view, or weekly
+view) need to be added, this can be done by just adding
+a new subroutine to index.cgi, and modifying @Actions.
+4) The name "index.cgi" lends itself to being the
+default document in a directory.
+
+Apart from that, there are really no major changes 
+from version 3.03, except that all scripts use strict
+'vars', and actually pass -cw tests. Hopefully, the
+documentation is a little better, too.
+
+There were several bugs in the previous version, that
+just happened to work because I was quite cavalier about
+using global variables, so occasionally it just worked
+by sheer luck. Odd, that.
+
+Oh, yeah, and I have combined some of the common code
+into HyperCal.pm. The Time::* modules are still needed.
+
+Finally, all of the configuration options in HyperCal.pm
+have been put into a single data structure %Config, just
+for the sake of not exporting 23 variables.
+
+This new version will still run with your existing
+datafiles, although you will want to rename 
+hypercal_id to datebook.id, and announce_id to 
+announce.id  Hopefully, that is not too much of a hassle.
+
+Version 3.03
+
+Better documentation and installation information,
+to make the CPAN distribution a little more palatable.
+Very minor changes.
+
+Version 3.02 - July 2, 1998
+Minor bug fix. I had the wrong variable, and it
+was causing dates to be dropped.
+
+Version 3.01 - May 3, 1998
+Minor change - someone requested that I put back 
+in a feature I used to have, where the number of
+events, rather than the text of those events, 
+was listed on the calendar.  What I did, since 
+people want it both ways, was to make this a
+configurable option in HyperCal.pm
+
+Version 3.0 - March 1998
+Code made more readable and more portable.  Much
+of the functionality moved out into a pm file.
+Database structure changed substantially.
+Time handling moved to standard Perl modules, 
+rather than my own home-grown routines, for
+added readability, portability, and reliability.
+And, when leap-year calculations fail, I can 
+blame it on someone else.
+
+Version 2.3 - October, 1995
+Hacked together to see if I could.  Remained
+largely unchanged since then.  The version
+number, if I recall correctly, was just made 
+up to make it look older than it was.

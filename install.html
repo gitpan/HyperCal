@@ -1,0 +1,106 @@
+<html>
+<head><title>Installing HyperCal</title></head>
+<body bgcolor="White" text="Black" link="Blue" vlink="Green" alink="Red">
+[
+<a href="http://www.rcbowen.com/products/HyperCal/">HyperCal</a>
+]
+
+<h3>Installing HyperCal</h3>
+
+<a href="#permissions"><b>File permissions</b></a><br>
+<a href="#password"><b>Restricting who can reserve rooms</b></a><br>
+<a href="#broken"><b>What to do if it still does not work</b></a><p>
+
+The following is the installation procedure for 
+HyperCal.  HyperCal is a web-based application, 
+not a module, and so there is no nice make and 
+install script, like much of the other Perl 
+software that is available on the net.
+<p>
+Some of the instructions below are for NT.  You will
+find that the <a href="http://www.apache.org/">Apache</a>
+web server to NT makes most, if not all, of these
+problems go away.  I would strongly recommend 
+installing that before you proceed any further.
+<p>
+Also, before you start, you will need to acquire the
+Time:: modules that I use.  They are available from 
+CPAN in the /modules/by-module/Time directory.
+The file that you want is Time-modules-CURRENTVERSION
+CPAN can be found at 
+<a href="http://www.perl.com/CPAN/">www.perl.com/CPAN</a>.
+If you are running the ActiveState 5.005+ build of Perl,
+run the Perl Package Manager (ppm.pl) and type
+"install Time-modules".
+<p>
+Extract the tar.gz file into your CGI directory.
+It will create a "hypercal" subdirectory.
+If you are using NT, and you don't know what a tar.gz
+file is, please get <a href="http://www.winzip.com">WinZip</a>
+before you write and tell me that the install 
+file does not work.
+<p>
+chmod +x all the .cgi files.  You can rename them 
+to .pl if that strikes your fancy.  I have them the
+way they are due to the way cgi-wrap is setup on my test server.
+On NT, it is likely that you will want to change
+them to .pl, rather than trying to wrestle with
+making NT work.  Some battles are just too big.
+<p>
+On NT, if you are running IIS or some similarly 
+brain-damaged HTTP server, you might want to move
+HyperCal.pm to the lib directory
+whererver you have Perl installed.  Probably 
+c:\perl\lib  The Perl scripts will be unable to find 
+it otherwise.  Just so the blame is in the right
+place, this is IIS's fault for not passing 
+ENV variables correctly, not Perl-Win32's fault.
+<p>
+Edit HyperCal.pm, setting the variables to 
+values that are correct for your local system.
+All variables should be self-explanatory.  The
+color stuff is a little cryptic, but you should be
+able to figure it out.
+<p>
+Access the scripts via 
+http://servername/cgi-directory/hypercal/index.cgi
+<p>
+
+<a name="permissions"><h3>File permissions</h3></a>
+
+People frequently have trouble with file permissions, so here's what you have to do. Remember that this is a database application, of sorts, so the scripts have to have write access to the "database" files. Those files are the files in the <b>datafiles</b> directory. Since on most servers the CGI processes run with no permissions, this means that you have to allow everyone to write to those files. On a Unix system, this means <code>chmod a+w filename</code>, and on NT, this means "Everyone, full control". If this concerns you a lot, you might want to move those files outside of the web root directory, so that nobody can retrieve those files with a browser. Just modify the location of the files in HyperCal.pm by putting a full path in the variable name. For example:<br>
+<pre>
+#  Data files
+my $datadir = "/securedirectory/datafiles";
+$Config->{datebook}="$datadir/datebook";
+$Config->{announce}="$datadir/announce";
+</pre>
+
+or, on Windows,
+
+<pre>
+#  Data files
+my $datadir = "c:/secure/datafiles";
+$Config->{datebook}="$datadir/datebook";
+$Config->{announce}="$datadir/announce"; 
+</pre>
+
+<a name="password"><h3>Restricting who can add events</h3></a>
+
+One of the more frequently requested features in past versions was the ability to restrict who can add events to the calendar. In this version, I have split the "user" and "admin" functionality into seperate files. This means, on web servers that support such a concept, that you can password protect the <b>events.cgi</b> file and/or the <b>announcements.cgi</b> file, so that only those persons with permission to do so can add, edit, and remove events and/or reservations. You will need to consult the documentation on your particular web server to see how to do this. A large variety of servers support this behavior, including the big three - Apache, IIS, and Netscape servers. If in doubt, just install <a href="http://www.apache.org/">Apache</a>.<p>
+
+<a name="broken"><h3>What to do if it still does not work:</h3></a>
+<ul>
+<li>Look in your server's error logs.
+<li>Read <a href="http://language.perl.com/CPAN/doc/FAQs/cgi/idiots-guide.html">
+http://language.perl.com/CPAN/doc/FAQs/cgi/idiots-guide.html</a>
+<li>Read the <a href="#permissions">permissions</a> stuff above one more time
+<li>Then, <a href="mailto:hypercal@rcbowen.com">contact me</a>, and we'll try to figure it out.</li>
+</ul>
+
+[
+<a href="http://www.rcbowen.com/products/HyperCal/">HyperCal</a>
+]
+
+</body>
+</html>

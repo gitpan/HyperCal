@@ -10,8 +10,8 @@ OS and HTTP server you are running, and where
 you want the thing to live.
 
 Please see information and installation 
-instructions at 
-http://www.rcbowen.com/products/HyperCal/
+instructions in install.html provided with this
+distribution.
 
 Rich Bowen
 rbowen\@rcbowen.com

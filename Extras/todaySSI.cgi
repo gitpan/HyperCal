@@ -1,21 +1,21 @@
 #!/usr/bin/perl
 #  List today's events
 #	Suitable for SSI
-use RCBowen;
 use HyperCal;
 use Time::JulianDay;
+my ($jd, @dates, $event,
+	);
 
 $jd = local_julian_day(time);
 
-open (DATES, "$datebook");
+open (DATES, "$Config->{datebook}");
 @dates = <DATES>;
 close DATES;
 
 PrintHeader();
 
-@dates = grep /^$jd$delimiter/, @dates;
+@dates = grep /^$jd$Config->{delimiter}/, @dates;
 for (@dates)	{
-	$pointer = EventSplit($_);
-	%Event = %$pointer;
-	print "<li>$Event{description}<br>\n";
+	$event = EventSplit($_);
+	print "<li>$event->{description}<br>\n";
 }
