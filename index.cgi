@@ -209,7 +209,7 @@ sub Main  {
 		~;
 	}  #  End if
 
-	$details{version} = $Config->{VERSION};
+	$details{version} = $HyperCal::VERSION;
 	return ($template, \%details);
 }  #  End sub Main
 

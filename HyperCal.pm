@@ -1,7 +1,10 @@
 package HyperCal;
+use strict;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK
+			$Config );
 
 require Exporter;
-@ISA = Exporter;
+@ISA = qw(Exporter AutoLoader);
 @EXPORT = qw(body_tag
 			month_txt
 			EventSplit
@@ -17,23 +20,19 @@ require Exporter;
 			$Config
 			);
 
-use vars qw($Config
-			);
-
-
+$VERSION="3.21";
 $Config={};
 #################################################
 ##  VARIABLES - SET THESE TO YOUR LOCAL CONFIG ##
 #################################################
-$Config->{VERSION}="3.2";
 $Config->{server_name} = "www.rcbowen.com";
 $Config->{delimiter} = "~~";
 
 # URL of the directory in which these files live
-$Config->{base_url}="/scripts/hypercal_dev/";
+$Config->{base_url}="/scripts/hypercal/";
 
 #  Location of the hypercal templates - you need to specify full path
-$Config->{templates} = "/home/rbowen/public_html/scripts/hypercal_dev/templates";
+$Config->{templates} = "/home/www/scripts/hypercal/templates";
 
 #  Some sites only allow cgi's with a .cgi extension,
 #  or you might need to change your file extension to "pl"
@@ -43,7 +42,7 @@ $Config->{ext} = "cgi";
 $Config->{old}=90;
 
 # Title of the calendar.
-$Config->{title}="HyperCal Version $Config->{VERSION}";
+$Config->{title}="HyperCal Version $VERSION";
 
 #  1 is on, 0 is off.  Should we display the number
 #  of events on that day, or the event text.
@@ -81,7 +80,7 @@ $Config->{month_images}= [
 	];
 
 #  Data files
-my $datadir = "/home/rbowen/public_html/scripts/hypercal_dev/datafiles";
+my $datadir = "/home/www/scripts/hypercal/datafiles";
 $Config->{datebook}="$datadir/datebook";
 $Config->{announce}="$datadir/announce";
 
@@ -241,13 +240,14 @@ sub FormParse  {
 sub PrintTemplate	{
 #  Displays an HTML template file in canonical RCBowen format,
 #  substituting values from %details.
-	my ($basedir,$template, $tmp) = @_;
-	my %details = %$tmp;
+	my ($basedir, $template, $details) = @_;
+	my ($line,
+		);
 
 	open (TEMPLATE, "$basedir/$template.html") 
 		or die "Could not open $basedir/$template.html: $!\n";
 	for $line (<TEMPLATE>)	{
-		$line =~ s/%%%(.*?)%%%/$details{$1}/g;
+		$line =~ s/%%%(.*?)%%%/$details->{$1}/g;
 		print $line;
 	}  #  End for
 	close TEMPLATE;

@@ -1,5 +1,10 @@
 HyperCal Changes history:
 
+Version 3.21 - December 8, 1998
+
+Minor fix - CPAN wants to have $VERSION defined, and it
+wasn't.
+
 Version 3.2 - December 6, 1998
 
 Bug fixes:
